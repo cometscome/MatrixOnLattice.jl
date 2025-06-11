@@ -11,8 +11,26 @@ struct MatrixOnLattice4D{NC,T} <: AbstractMatrixOnLattice
     NZ::Int64
     NT::Int64
 
-    function MatrixOnLattice4D(NC, NX, NY, NZ, NT)
-        U = zeros(ComplexF64, NC, NC, NX, NY, NZ, NT)
+    function MatrixOnLattice4D(NC, NX, NY, NZ, NT; accelarator="none")
+        Ucpu = zeros(ComplexF64, NC, NC, NX, NY, NZ, NT)
+        if accelarator == "none"
+            U = Ucpu
+        elseif accelarator == "cuda"
+            ext = Base.get_extension(@__MODULE__, :CUDAExt)
+            if !isnothing(ext)
+                if ext.CUDA.has_cuda()
+                    U = ext.CUDA.CuArray(Ucpu)
+                else
+                    U = Ucpu
+                    @warn("CUDA is not available, using CPU array instead.")
+                end
+            else
+                error("CUDA should be installed to use CUDAExt")
+            end
+        else
+
+            error("Unsupported accelerator: $accelarator")
+        end
         T = typeof(U)
         return new{NC,T}(U, NC, NX, NY, NZ, NT)
     end

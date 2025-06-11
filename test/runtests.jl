@@ -1,6 +1,7 @@
 using MatrixOnLattice
 using Test
 using LinearAlgebra
+import CUDA
 
 function test()
     NX = 16
@@ -13,6 +14,8 @@ function test()
     U1 = Randomfield(NC, NX, NY, NZ, NT)
     U2 = Identityfield(NC, NX, NY, NZ, NT)
     U3 = Identityfield(NC, NX, NY, NZ, NT)
+
+    U = MatrixOnLattice4D(NC, NX, NY, NZ, NT; accelarator="cuda")
 
     mul!(U, U2, U3)
     val = tr(U)
