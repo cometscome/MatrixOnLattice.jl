@@ -46,9 +46,12 @@ function Base.similar(M::MatrixOnLattice4D)
     return MatrixOnLattice4D(M.NC, M.NX, M.NY, M.NZ, M.NT)
 end
 
-
-
 function applyfunction!(M::MatrixOnLattice4D, f!::Function)
+    error("applyfunction!(M,f!) is not implemented for the type $(typeof(M)).")
+end
+
+function applyfunction!(M::MatrixOnLattice4D{NC,Array{T,6}},
+    f!::Function) where {NC,T}
     for it = 1:M.NT
         for iz = 1:M.NZ
             for iy = 1:M.NY
@@ -61,7 +64,13 @@ function applyfunction!(M::MatrixOnLattice4D, f!::Function)
     return
 end
 
-function applyfunction!(M::MatrixOnLattice4D, A::MatrixOnLattice4D, f!::Function)
+function applyfunction!(M::MatrixOnLattice4D,
+    A::MatrixOnLattice4D, f!::Function)
+    error("applyfunction!(M,A,f!) is not implemented for the type $(typeof(M)).")
+end
+
+function applyfunction!(M::MatrixOnLattice4D{NC,Array{T,6}},
+    A::MatrixOnLattice4D, f!::Function) where {NC,T}
     for it = 1:M.NT
         for iz = 1:M.NZ
             for iy = 1:M.NY
@@ -74,7 +83,13 @@ function applyfunction!(M::MatrixOnLattice4D, A::MatrixOnLattice4D, f!::Function
     return
 end
 
-function applyfunction!(M::MatrixOnLattice4D, A::MatrixOnLattice4D, B::MatrixOnLattice4D, f!::Function)
+function applyfunction!(M::MatrixOnLattice4D,
+    A::MatrixOnLattice4D, B::MatrixOnLattice4D, f!::Function)
+    error("applyfunction!(M,A,B,f!) is not implemented for the type $(typeof(M)).")
+end
+
+function applyfunction!(M::MatrixOnLattice4D{NC,Array{T,6}},
+    A::MatrixOnLattice4D, B::MatrixOnLattice4D, f!::Function) where {NC,T}
     for it = 1:M.NT
         for iz = 1:M.NZ
             for iy = 1:M.NY
@@ -88,6 +103,10 @@ function applyfunction!(M::MatrixOnLattice4D, A::MatrixOnLattice4D, B::MatrixOnL
 end
 
 function applyfunctionsum(M::MatrixOnLattice4D, f::Function)
+    error("applyfunction!(M,f!) is not implemented for the type $(typeof(M)).")
+end
+
+function applyfunctionsum(M::MatrixOnLattice4D{NC,Array{T,6}}, f::Function) where {NC,T}
     val = 0.0im
     for it = 1:M.NT
         for iz = 1:M.NZ
