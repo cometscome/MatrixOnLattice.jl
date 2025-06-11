@@ -18,7 +18,10 @@ function test()
     U = MatrixOnLattice4D(NC, NX, NY, NZ, NT; accelarator="cuda")
     println(typeof(U))
 
+
+
     mul!(U, U2, U3)
+    return
     val = tr(U)
     println(val)
 end

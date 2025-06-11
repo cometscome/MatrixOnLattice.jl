@@ -26,6 +26,7 @@ struct Blockindices
 
     end
 end
+export Blockindices
 
 @inline convert_x(x, xd, xd_s) = mod(div(x - 1, xd_s), xd)
 @inline convert_br(b, r, blocks, blocks_s, blocknumbers, blocknumbers_s) = 1 + convert_x(b, blocks, blocks_s) +
