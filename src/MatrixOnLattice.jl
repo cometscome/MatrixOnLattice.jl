@@ -16,6 +16,7 @@ struct MatrixOnLattice4D{NC,T,accdevise,dtype} <: AbstractMatrixOnLattice
 end
 
 export MatrixOnLattice4D
+export Identityfield, Randomfield,substitute!
 
 function MatrixOnLattice4D(NC, NX, NY, NZ, NT;
     accelarator="none",
@@ -45,7 +46,7 @@ function MatrixOnLattice4D_cuda(NC, NX, NY, NZ, NT, blocks_in; dtype=ComplexF64)
             if blocks_in !== nothing
                 blocks = blocks_in
             else
-                blocks = (1, 1, 1, 1)
+                blocks = (4, 4, 4, 4)
             end
 
             blockinfo = Blockindices(L, blocks)#Blockindices(Tuple(blocks),Tuple(blocks_s),Tuple(blocknumbers),Tuple(blocknumbers_s),blocksize,rsize)
@@ -102,11 +103,11 @@ end
 
 function applyfunction!(M::MatrixOnLattice4D,
     A::MatrixOnLattice4D, f!::Function)
-    error("applyfunction!(M,A,f!) is not implemented for the type $(typeof(M)).")
+    error("applyfunction!(M,A,f!) is not implemented for the type $(typeof(M)) and $(typeof(A)).")
 end
 
 function applyfunction!(M::MatrixOnLattice4D{NC,Array{T,6},:none},
-    A::MatrixOnLattice4D, f!::Function) where {NC,T}
+    A::MatrixOnLattice4D{NC,Array{T,6},:none}, f!::Function) where {NC,T}
     for it = 1:M.NT
         for iz = 1:M.NZ
             for iy = 1:M.NY
@@ -195,7 +196,7 @@ function Identityfield(NC, NX, NY, NZ, NT)
     applyfunction!(M, identity!)
     return M
 end
-export Identityfield, Randomfield
+
 
 function LinearAlgebra.mul!(C::MatrixOnLattice4D, A::MatrixOnLattice4D, B::MatrixOnLattice4D)
     applyfunction!(C, A, B, multiply!)
@@ -213,6 +214,19 @@ end
 function LinearAlgebra.tr(M::MatrixOnLattice4D)
     val = applyfunctionsum(M, traceonlattice)
     return val
+end
+
+function substitute_each!(ix::TN, iy::TN, iz::TN, it::TN, M::MatrixOnLattice4D{NC,T},
+    A::MatrixOnLattice4D) where {NC,T,TN<:Integer}
+    for j in 1:NC
+        for i in 1:NC
+            M.U[i, j, ix, iy, iz, it] = A.U[i, j, ix, iy, iz, it]
+        end
+    end
+end
+
+function substitute!(M::MatrixOnLattice4D,A::MatrixOnLattice4D)
+    applyfunction!(M,A, substitute_each!)
 end
 
 end

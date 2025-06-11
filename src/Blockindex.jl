@@ -59,3 +59,4 @@ function fourdim_cordinate(b, r, blockinfo)
 
     return ix, iy, iz, it
 end
+export  fourdim_cordinate
