@@ -12,13 +12,16 @@ julia = "1.11"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+JACC = "0979c8fe-16a4-4796-9b82-89a9f10403ea"
 
 [extensions]
 CUDAExt = "CUDA"
+JACCExt = "JACC"
 
 [extras]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+JACC = "0979c8fe-16a4-4796-9b82-89a9f10403ea"
 
 [targets]
-test = ["Test","CUDA"]
+test = ["Test","CUDA","JACC"]
