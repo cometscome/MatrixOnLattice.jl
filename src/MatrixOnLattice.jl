@@ -16,7 +16,7 @@ struct MatrixOnLattice4D{NC,T,accdevise,dtype} <: AbstractMatrixOnLattice
 end
 
 export MatrixOnLattice4D
-export Identityfield, Randomfield,substitute!
+export Identityfield, Randomfield, substitute!
 
 function MatrixOnLattice4D(NC, NX, NY, NZ, NT;
     accelarator="none",
@@ -26,6 +26,8 @@ function MatrixOnLattice4D(NC, NX, NY, NZ, NT;
         return MatrixOnLattice4D_cpu(NC, NX, NY, NZ, NT; dtype)
     elseif accelarator == "cuda"
         return MatrixOnLattice4D_cuda(NC, NX, NY, NZ, NT, blocks_in; dtype)
+    elseif accelarator == "jacc"
+        return MatrixOnLattice4D_jacc(NC, NX, NY, NZ, NT; dtype)
     end
 
 end
@@ -69,6 +71,21 @@ function MatrixOnLattice4D_cuda(NC, NX, NY, NZ, NT, blocks_in; dtype=ComplexF64)
     return MatrixOnLattice4D{NC,T,accdevise,dtype}(U, NC, NX, NY, NZ, NT, blockinfo)
 end
 
+function MatrixOnLattice4D_jacc(NC, NX, NY, NZ, NT; dtype=ComplexF64)
+    ext = Base.get_extension(@__MODULE__, :JACCExt)
+    if !isnothing(ext)
+        NV = NX * NY * NZ * NT
+        Ucpu = zeros(dtype, NC, NC, NV)
+        U = ext.JACC.array(Ucpu)
+        accdevise = :jacc
+    else
+        error("JACC should be installed to use JACCExt")
+    end
+    T = typeof(U)
+    return MatrixOnLattice4D{NC,T,accdevise,dtype}(U, NC, NX, NY, NZ, NT, nothing)
+end
+
+
 
 
 function Base.zero(M::MatrixOnLattice4D{NC,T,:none,dtype}) where {NC,T,dtype}
@@ -76,8 +93,13 @@ function Base.zero(M::MatrixOnLattice4D{NC,T,:none,dtype}) where {NC,T,dtype}
 end
 
 function Base.zero(M::MatrixOnLattice4D{NC,T,:cuda,dtype}) where {NC,T,dtype}
-    return MatrixOnLattice4D_cuda(M.NC, M.NX, M.NY, M.NZ, M.NT, M.blockinfo)
+    return MatrixOnLattice4D_cuda(M.NC, M.NX, M.NY, M.NZ, M.NT, M.blockinfo; dtype)
 end
+
+function Base.zero(M::MatrixOnLattice4D{NC,T,:jacc,dtype}) where {NC,T,dtype}
+    return MatrixOnLattice4D_jacc(M.NC, M.NX, M.NY, M.NZ, M.NT; dtype)
+end
+
 
 function Base.similar(M::MatrixOnLattice4D{NC,T,accdevise}) where {NC,T,accdevise}
     return zero(M)
@@ -225,8 +247,8 @@ function substitute_each!(ix::TN, iy::TN, iz::TN, it::TN, M::MatrixOnLattice4D{N
     end
 end
 
-function substitute!(M::MatrixOnLattice4D,A::MatrixOnLattice4D)
-    applyfunction!(M,A, substitute_each!)
+function substitute!(M::MatrixOnLattice4D, A::MatrixOnLattice4D)
+    applyfunction!(M, A, substitute_each!)
 end
 
 end
