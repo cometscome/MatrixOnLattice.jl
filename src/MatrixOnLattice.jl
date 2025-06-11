@@ -72,15 +72,15 @@ function MatrixOnLattice4D_cuda(NC, NX, NY, NZ, NT, blocks_in; dtype=ComplexF64)
 end
 
 function MatrixOnLattice4D_jacc(NC, NX, NY, NZ, NT; dtype=ComplexF64)
-    ext = Base.get_extension(@__MODULE__, :JACCExt)
-    if !isnothing(ext)
-        NV = NX * NY * NZ * NT
-        Ucpu = zeros(dtype, NC, NC, NV)
-        U = ext.JACC.array(Ucpu)
-        accdevise = :jacc
-    else
-        error("JACC should be installed to use JACCExt")
-    end
+    #ext = Base.get_extension(@__MODULE__, :JACCExt)
+    #if !isnothing(ext)
+    NV = NX * NY * NZ * NT
+    Ucpu = zeros(dtype, NC, NC, NV)
+    U = JACC.array(Ucpu)
+    accdevise = :jacc
+    #else
+    #    error("JACC should be installed to use JACCExt")
+    #end
     T = typeof(U)
     return MatrixOnLattice4D{NC,T,accdevise,dtype}(U, NC, NX, NY, NZ, NT, nothing)
 end
@@ -250,5 +250,7 @@ end
 function substitute!(M::MatrixOnLattice4D, A::MatrixOnLattice4D)
     applyfunction!(M, A, substitute_each!)
 end
+
+include("./JACCpart.jl")
 
 end

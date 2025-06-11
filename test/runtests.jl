@@ -1,9 +1,11 @@
+import JACC
+JACC.@init_backend
+
 using MatrixOnLattice
 using Test
 using LinearAlgebra
 import CUDA
-import JACC
-JACC.@init_backend
+
 
 function test()
     NX = 16
