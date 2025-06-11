@@ -25,6 +25,7 @@ end
 
 function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{NC,T1,:jacc},
     A::MatrixOnLattice4D{NC,T2,:none}, f!::Function) where {NC,T1,T2}
+    N = M.NX * M.NY * M.NZ * M.NT
 
     Mcpu = Array(M.U)
     for i = 1:N
@@ -49,6 +50,11 @@ function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{NC,T1,:none},
     A::MatrixOnLattice4D{NC,T2,:jacc}, f!::Function) where {NC,T1,T2}
 
     Acpu = Array(A.U)
+    N = M.NX * M.NY * M.NZ * M.NT
+    for i = 1:N
+        ix, iy, iz, it = index_to_coords(i, M.NX, M.NY, M.NZ, M.NT)
+        f!(i, ix, iy, iz, it, M, Acpu)
+    end
     #=
     blockinfo = A.blockinfo
     for r = 1:blockinfo.rsize
@@ -61,7 +67,7 @@ function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{NC,T1,:none},
     return
 end
 
-function MatrixOnLattice.substitute_each!(i::TN, ix::TN, iy::TN, iz::TN, it::TN, M::Array{T,4},
+function MatrixOnLattice.substitute_each!(i::TN, ix::TN, iy::TN, iz::TN, it::TN, M::Array{T,3},
     A::MatrixOnLattice4D{NC,T2}) where {NC,T,TN<:Integer,T2}
     for jc in 1:NC
         for ic in 1:NC
@@ -69,5 +75,30 @@ function MatrixOnLattice.substitute_each!(i::TN, ix::TN, iy::TN, iz::TN, it::TN,
         end
     end
 end
+
+
+function MatrixOnLattice.substitute_each!(i::TN, ix::TN,
+    iy::TN, iz::TN, it::TN, M::MatrixOnLattice4D{NC,T2},
+    A::Array{T,3}) where {NC,T,TN<:Integer,T2}
+    for jc in 1:NC
+        for ic in 1:NC
+            M.U[ic, jc, ix, iy, iz, it] = A[ic, jc, i]
+        end
+    end
+end
+
+
+function MatrixOnLattice.multiply!(i::Integer, C::T1,
+    A::T1, B::T1, NC) where {T1}
+    for jc in 1:NC
+        for ic in 1:NC
+            C[ic, jc, i] = 0.0
+            for kc in 1:NC
+                C[ic, jc, i] += A[ic, kc, i] * B[kc, jc, i]
+            end
+        end
+    end
+end
+
 
 end

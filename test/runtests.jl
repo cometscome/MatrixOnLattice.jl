@@ -48,6 +48,18 @@ function test()
     Uj2 = MatrixOnLattice4D(NC, NX, NY, NZ, NT; accelarator="jacc")
 
     substitute!(Uj, U1)
+    substitute!(Uj1, U2)
+    substitute!(Uj2, U3)
+
+
+    mul!(Uj, Uj1, Uj2)
+    @time mul!(Uj, Uj1, Uj2)
+    @time mul!(Uj, Uj1, Uj2)
+
+    substitute!(U, Uj)
+
+    val = tr(U)
+    println("jacc: ", val)
 
     println(typeof(Uj))
     return
