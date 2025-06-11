@@ -1,6 +1,8 @@
 module MatrixOnLattice
 using LinearAlgebra
 
+include("Blockindex.jl")
+
 abstract type AbstractMatrixOnLattice end
 
 struct MatrixOnLattice4D{NC,T} <: AbstractMatrixOnLattice
@@ -11,8 +13,14 @@ struct MatrixOnLattice4D{NC,T} <: AbstractMatrixOnLattice
     NZ::Int64
     NT::Int64
 
-    function MatrixOnLattice4D(NC, NX, NY, NZ, NT; accelarator="none")
+    function MatrixOnLattice4D(NC, NX, NY, NZ, NT; 
+        accelarator="none",
+        blocks_in= nothing;)
         Ucpu = zeros(ComplexF64, NC, NC, NX, NY, NZ, NT)
+
+
+
+        
         if accelarator == "none"
             U = Ucpu
         elseif accelarator == "cuda"
