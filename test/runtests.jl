@@ -42,9 +42,9 @@ function test()
     @time mul!(Ug, Ug1, Ug2)
     @time mul!(Ug, Ug1, Ug2)
     substitute!(U, Ug)
-    val = tr(U)
+    val2 = tr(U)
     println("cuda: ", val)
-
+    @test val2 ≈ val
 
 
 
