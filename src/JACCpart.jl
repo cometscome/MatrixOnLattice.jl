@@ -1,6 +1,7 @@
 import JACC
+#JACC.@init_backend
 
-const JACCArray = JACC.array_type()
+#const JACCArray = JACC.array_type()
 
 function index_to_coords(i, NX, NY, NZ, NT)
     ix = mod1(i, NX)
@@ -21,6 +22,17 @@ function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{NC,T,:jacc},
     return
 end
 
+function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{3,T,:jacc},
+    A::MatrixOnLattice4D, B::MatrixOnLattice4D, f!::Function) where {T}
+    N = M.NX * M.NY * M.NZ * M.NT
+
+    JACC.parallel_for(N, f!, M.U, A.U, B.U)
+    #CUDA.@sync begin
+    #    CUDA.@cuda threads = M.blockinfo.blocksize blocks = M.blockinfo.rsize f!(M.blockinfo, M.U, A.U, B.U,NC)
+    #end
+    return
+end
+
 function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{NC,T1,:jacc},
     A::MatrixOnLattice4D{NC,T2,:none}, f!::Function) where {NC,T1,T2}
     N = M.NX * M.NY * M.NZ * M.NT
@@ -34,7 +46,7 @@ function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{NC,T1,:jacc},
     blockinfo = M.blockinfo
     for r = 1:blockinfo.rsize
         for b = 1:blockinfo.blocksize
-            ix, iy, iz, it = fourdim_cordinate(b, r, blockinfo)
+            ix, iy, iz, it = fourdim_cordinate(i, blockinfo)
              f!(b,r,ix, iy, iz, it, Mcpu, A)
         end
     end
@@ -57,8 +69,8 @@ function MatrixOnLattice.applyfunction!(M::MatrixOnLattice4D{NC,T1,:none},
     blockinfo = A.blockinfo
     for r = 1:blockinfo.rsize
         for b = 1:blockinfo.blocksize
-            ix, iy, iz, it = fourdim_cordinate(b, r, blockinfo)
-            f!(b, r, ix, iy, iz, it, M, Acpu)
+            ix, iy, iz, it = fourdim_cordinate(i, blockinfo)
+            f!(i, ix, iy, iz, it, M, Acpu)
         end
     end
     =#
@@ -96,4 +108,51 @@ function MatrixOnLattice.multiply!(i::Integer, C::T1,
             end
         end
     end
+end
+
+function LinearAlgebra.mul!(C::MatrixOnLattice4D{3,T,:jacc},
+     A::MatrixOnLattice4D, B::MatrixOnLattice4D) where {T}
+    MatrixOnLattice.applyfunction!(C, A, B, multiply3!)
+    return C
+end
+
+function MatrixOnLattice.multiply3!(i::Integer, C::T1,
+    A::T1, B::T1) where {T1}
+
+    C[1, 1, i] = A[1, 1, i] * B[1, 1, i] + 
+             A[1, 2, i] * B[2, 1, i] +
+              A[1, 3, i] * B[3, 1, i]
+    C[2, 1, i] = A[2, 1, i] * B[1, 1, i] +
+             A[2, 2, i] * B[2, 1, i] +
+              A[2, 3, i] * B[1, 3, i]
+    C[3, 1, i] = A[3, 1, i] * B[1, 1, i] +
+             A[3, 2, i] * B[2, 1, i] +
+              A[3, 3, i] * B[1, 3, i]              
+
+    C[1, 2, i] = A[1, 1, i] * B[1, 2, i] +
+             A[1, 2, i] * B[2, 2, i] +
+              A[1, 3, i] * B[3, 2, i]
+    C[2, 2, i] = A[2, 1, i] * B[1, 2, i] +
+             A[2, 2, i] * B[2, 2, i] +
+              A[2, 3, i] * B[3, 2, i]
+    C[3, 2, i] = A[3, 1, i] * B[1, 2, i] +
+             A[3, 2, i] * B[2, 2, i] +
+              A[3, 3, i] * B[3, 2, i]
+                            
+              
+    C[1, 3, i] = A[1, 1, i] * B[1, 3, i] +
+             A[1, 2, i] * B[2, 3, i] +
+              A[1, 3, i] * B[3, 3, i]
+
+
+    C[2, 3, i] = A[2, 1, i] * B[1, 3, i] +
+             A[2, 2, i] * B[2, 3, i] +
+              A[2, 3, i] * B[3, 3, i]
+
+
+    C[3, 3, i] = A[3, 1, i] * B[1, 3, i] +
+             A[3, 2, i] * B[2, 3, i] +
+              A[3, 3, i] * B[3, 3, i]
+
+    return
 end

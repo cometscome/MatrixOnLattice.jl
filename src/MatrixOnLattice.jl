@@ -15,6 +15,8 @@ struct MatrixOnLattice4D{NC,T,accdevise,dtype} <: AbstractMatrixOnLattice
     blockinfo::Union{Blockindices,Nothing}
 end
 
+
+
 export MatrixOnLattice4D
 export Identityfield, Randomfield, substitute!
 
@@ -187,8 +189,8 @@ function randomize!(ix::TN, iy::TN, iz::TN, it::TN, M::MatrixOnLattice4D{NC,T}) 
     end
 end
 
-function Randomfield(NC, NX, NY, NZ, NT)
-    M = MatrixOnLattice4D(NC, NX, NY, NZ, NT)
+function Randomfield(NC, NX, NY, NZ, NT;dtype=ComplexF64)
+    M = MatrixOnLattice4D(NC, NX, NY, NZ, NT;dtype)
     applyfunction!(M, randomize!)
     return M
 end
@@ -213,8 +215,52 @@ function multiply!(ix::TN, iy::TN, iz::TN, it::TN, C::MatrixOnLattice4D{NC,T},
     end
 end
 
-function Identityfield(NC, NX, NY, NZ, NT)
-    M = MatrixOnLattice4D(NC, NX, NY, NZ, NT)
+@inbounds function multiply3!(ix::TN, iy::TN, iz::TN, it::TN, C::T1,
+    A::T1, B::T1) where {T1,TN <: Integer}
+
+    C.U[1, 1, ix,iy,iz,it] = A.U[1, 1, ix,iy,iz,it] * B.U[1, 1, ix,iy,iz,it] + 
+             A.U[1, 2, ix,iy,iz,it] * B.U[2, 1, ix,iy,iz,it] +
+              A.U[1, 3, ix,iy,iz,it] * B.U[3, 1, ix,iy,iz,it]
+    C.U[2, 1, ix,iy,iz,it] = A.U[2, 1, ix,iy,iz,it] * B.U[1, 1, ix,iy,iz,it] +
+             A.U[2, 2, ix,iy,iz,it] * B.U[2, 1, ix,iy,iz,it] +
+              A.U[2, 3, ix,iy,iz,it] * B.U[1, 3, ix,iy,iz,it]
+    C.U[3, 1, ix,iy,iz,it] = A.U[3, 1, ix,iy,iz,it] * B.U[1, 1, ix,iy,iz,it] +
+             A.U[3, 2, ix,iy,iz,it] * B.U[2, 1, ix,iy,iz,it] +
+              A.U[3, 3, ix,iy,iz,it] * B.U[1, 3, ix,iy,iz,it]              
+
+    C.U[1, 2, ix,iy,iz,it] = A.U[1, 1, ix,iy,iz,it] * B.U[1, 2, ix,iy,iz,it] +
+             A.U[1, 2, ix,iy,iz,it] * B.U[2, 2, ix,iy,iz,it] +
+              A.U[1, 3, ix,iy,iz,it] * B.U[3, 2, ix,iy,iz,it]
+    C.U[2, 2, ix,iy,iz,it] = A.U[2, 1, ix,iy,iz,it] * B.U[1, 2, ix,iy,iz,it] +
+             A.U[2, 2, ix,iy,iz,it] * B.U[2, 2, ix,iy,iz,it] +
+              A.U[2, 3, ix,iy,iz,it] * B.U[3, 2, ix,iy,iz,it]
+    C.U[3, 2, ix,iy,iz,it] = A.U[3, 1, ix,iy,iz,it] * B.U[1, 2, ix,iy,iz,it] +
+             A.U[3, 2, ix,iy,iz,it] * B.U[2, 2, ix,iy,iz,it] +
+              A.U[3, 3, ix,iy,iz,it] * B.U[3, 2, ix,iy,iz,it]
+                            
+              
+    C.U[1, 3, ix,iy,iz,it] = A.U[1, 1, ix,iy,iz,it] * B.U[1, 3, ix,iy,iz,it] +
+             A.U[1, 2, ix,iy,iz,it] * B.U[2, 3, ix,iy,iz,it] +
+              A.U[1, 3, ix,iy,iz,it] * B.U[3, 3, ix,iy,iz,it]
+
+
+    C.U[2, 3, ix,iy,iz,it] = A.U[2, 1, ix,iy,iz,it] * B.U[1, 3, ix,iy,iz,it] +
+             A.U[2, 2, ix,iy,iz,it] * B.U[2, 3, ix,iy,iz,it] +
+              A.U[2, 3, ix,iy,iz,it] * B.U[3, 3, ix,iy,iz,it]
+
+
+    C.U[3, 3, ix,iy,iz,it] = A.U[3, 1, ix,iy,iz,it] * B.U[1, 3, ix,iy,iz,it] +
+             A.U[3, 2, ix,iy,iz,it] * B.U[2, 3, ix,iy,iz,it] +
+              A.U[3, 3, ix,iy,iz,it] * B.U[3, 3, ix,iy,iz,it]
+
+    return
+end
+
+
+
+
+function Identityfield(NC, NX, NY, NZ, NT;dtype=ComplexF64)
+    M = MatrixOnLattice4D(NC, NX, NY, NZ, NT;dtype)
     applyfunction!(M, identity!)
     return M
 end
@@ -224,6 +270,13 @@ function LinearAlgebra.mul!(C::MatrixOnLattice4D, A::MatrixOnLattice4D, B::Matri
     applyfunction!(C, A, B, multiply!)
     return C
 end
+
+function LinearAlgebra.mul!(C::MatrixOnLattice4D{3,T,:none},
+     A::MatrixOnLattice4D, B::MatrixOnLattice4D) where {T}
+    MatrixOnLattice.applyfunction!(C, A, B, multiply3!)
+    return C
+end
+
 
 function traceonlattice(ix::TN, iy::TN, iz::TN, it::TN, M::MatrixOnLattice4D{NC,T}) where {NC,T,TN<:Integer}
     val = 0.0im
