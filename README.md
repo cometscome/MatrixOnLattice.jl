@@ -57,11 +57,11 @@ test()
 ## JACC test
 [JACC](https://github.com/JuliaORNL/JACC.jl) version
 
-```
+"
 CPU/GPU performance portable layer for Julia
 
 JACC.jl follows a function as a argument approach in combination with the power of Julia's ecosystem for multiple dispatch, GPU access via JuliaGPU back ends, and package extensions since Julia v1.9 . Similar to portable layers like Kokkos, users would pass a size and a function including its arguments to a parallel_for or parallel_reduce function. 
-```
+"
 
 ```julia
 using CUDA
@@ -139,11 +139,12 @@ test()
 ```
 
 ## Single precision
+
+```julia
 using CUDA
 using MatrixOnLattice
 using Test
 using LinearAlgebra
-```julia
 function test32()
     NX = 16
     NY = 16
