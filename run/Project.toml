@@ -1,0 +1,7 @@
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+JACC = "0979c8fe-16a4-4796-9b82-89a9f10403ea"
+MatrixOnLattice = "2a0c4fcd-8d5e-48f2-bf56-f62978c3f191"
+
+[extras]
+JACC = "0979c8fe-16a4-4796-9b82-89a9f10403ea"
